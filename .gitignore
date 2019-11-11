@@ -13,3 +13,6 @@
 
 # IDE configuration
 /.idea/
+
+# Coverage out
+/coverage.out

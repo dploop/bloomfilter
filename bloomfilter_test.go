@@ -1,6 +1,8 @@
 package bloomfilter
 
 import (
+	"encoding/binary"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -98,8 +100,82 @@ func TestNew(t *testing.T) {
 
 func TestBloomFilter_Add(t *testing.T) {
 
+	var (
+		bf  *BloomFilter
+		err error
+	)
+
+	bf, err = NewWithEstimate(1000, 0.03)
+	if bf == nil {
+		t.Errorf("bf(%v) should not be nil", bf)
+	}
+	if err != nil {
+		t.Errorf("err(%v) should not be nil", err)
+	}
+
+	foo, bar := []byte("foo"), []byte("bar")
+	bf.Add(foo)
+	if !bf.Contains(foo) {
+		t.Errorf("bf should contains %s with high possibility", foo)
+	}
+	if bf.Contains(bar) {
+		t.Errorf("bf should not contains %s", bar)
+	}
 }
 
-func TestBloomFilter_Test(t *testing.T) {
+func TestBloomFilter_Contains(t *testing.T) {
 
+	var (
+		bf  *BloomFilter
+		err error
+	)
+
+	bf, err = NewWithEstimate(1000, 0.03)
+	if bf == nil {
+		t.Errorf("bf(%v) should not be nil", bf)
+	}
+	if err != nil {
+		t.Errorf("err(%v) should not be nil", err)
+	}
+
+	foo, bar := []byte("foo"), []byte("bar")
+	bf.Add(foo)
+	if !bf.Contains(foo) {
+		t.Errorf("bf should contains %s with high possibility", foo)
+	}
+	if bf.Contains(bar) {
+		t.Errorf("bf should not contains %s", bar)
+	}
+}
+
+func BenchmarkBloomFilter_Add(b *testing.B) {
+
+	const n = 1000000
+	bf, _ := NewWithEstimate(n, 0.03)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		item, v := make([]byte, 4), uint32(i%n)
+		binary.BigEndian.PutUint32(item, v)
+		bf.Add(item)
+	}
+	runtime.KeepAlive(bf)
+}
+
+func BenchmarkBloomFilter_Contains(b *testing.B) {
+
+	const n = 1000000
+	bf, _ := NewWithEstimate(n, 0.03)
+	for i := 0; i < n; i++ {
+		item, v := make([]byte, 4), uint32(i%n)
+		binary.BigEndian.PutUint32(item, v)
+		bf.Add(item)
+	}
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		item, v := make([]byte, 4), uint32(i%n)
+		binary.BigEndian.PutUint32(item, v)
+		runtime.KeepAlive(bf.Contains(item))
+	}
 }

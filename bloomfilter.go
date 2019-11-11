@@ -3,20 +3,28 @@ package bloomfilter
 import (
 	"fmt"
 	"math"
-	"unsafe"
+	"sync"
 )
 
-type bucket = uint
-
-const width = uint64(unsafe.Sizeof(bucket(0)))
-
+// A BloomFilter is a space-efficient probabilistic data structure, which is
+// used to test whether an item is a member of a set. False positive matches
+// are possible, but false negatives are not. In other words, a query returns
+// either "possibly in set" or "definitely not in set".
 type BloomFilter struct {
-	m       uint64
-	k       uint64
-	hasher  Hasher
-	buckets []bucket
+	// The capacity of bitset.
+	m uint64
+	// The storage of bitset.
+	bitset []byte
+	// Number of hash functions.
+	k uint64
+	// Hasher to generate hashes.
+	hasher Hasher
+	// A lock to let concurrency.
+	lock sync.RWMutex
 }
 
+// NewWithEstimate create a Bloom filter for about n items with p false positive
+// possibility.
 func NewWithEstimate(n uint64, p float64) (*BloomFilter, error) {
 
 	if n == 0 {
@@ -30,12 +38,15 @@ func NewWithEstimate(n uint64, p float64) (*BloomFilter, error) {
 	return New(EstimateParameters(n, p))
 }
 
+// EstimateParameters estimates the capacity of bitset and the number of hash
+// functions for about n items with p false positive possibility.
 func EstimateParameters(n uint64, p float64) (uint64, uint64) {
 	m := math.Ceil(math.Log2E * math.Log2(1/p) * float64(n))
 	k := math.Ceil(math.Ln2 * m / float64(n))
 	return uint64(m), uint64(k)
 }
 
+// New create a Bloom filter with m bits storage and k hash functions.
 func New(m uint64, k uint64) (*BloomFilter, error) {
 
 	if m == 0 {
@@ -46,27 +57,34 @@ func New(m uint64, k uint64) (*BloomFilter, error) {
 		return nil, fmt.Errorf("invalid argument k(%v)", k)
 	}
 
-	bf := &BloomFilter{m: m, k: k, hasher: defaultHasher}
-	bf.buckets = make([]bucket, (m-1)/width+1)
-
+	bf := &BloomFilter{
+		m:      m,
+		k:      k,
+		hasher: hasherMurmur3,
+		bitset: bitsetNew(m),
+	}
 	return bf, nil
 }
 
-func (bf *BloomFilter) Add(data []byte) {
-	hashes := bf.hasher(data)
+// Add operation add item to the Bloom filter.
+func (bf *BloomFilter) Add(item []byte) {
+	hashes := bf.hasher(item)
+	bf.lock.Lock()
+	defer bf.lock.Unlock()
 	for i := uint64(0); i < bf.k; i++ {
-		h := hashes(i) % bf.m
-		b := bucket(1) << (i % width)
-		bf.buckets[h/width] |= b
+		bitsetMark(bf.bitset, hashes(i)%bf.m)
 	}
 }
 
-func (bf *BloomFilter) Test(data []byte) bool {
-	hashes := bf.hasher(data)
+// Contains returns true if the item is in the Bloom filter, false otherwise.
+// If true, the result might be a false positive.
+// If false, the item is definitely not in the set.
+func (bf *BloomFilter) Contains(item []byte) bool {
+	hashes := bf.hasher(item)
+	bf.lock.RLock()
+	defer bf.lock.RUnlock()
 	for i := uint64(0); i < bf.k; i++ {
-		h := hashes(i) % bf.m
-		b := bucket(1) << (i % width)
-		if bf.buckets[h/width]&b == 0 {
+		if bitsetTest(bf.bitset, hashes(i)%bf.m) {
 			return false
 		}
 	}
