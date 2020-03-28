@@ -28,7 +28,7 @@ import (
 func main() {
 	bf, err := bloomfilter.NewWithEstimate(1000000, 0.03)
 	if err != nil {
-		log.Fatalf("failed to new bloom filter: %v", err)
+		log.Fatalf("failed to new Bloom filter: %v", err)
 	}
 	bf.Add([]byte("foo"))
 	if bf.Contains([]byte("bar")) {

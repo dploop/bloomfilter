@@ -1,11 +1,14 @@
 test:
-	go test -v -cover -coverprofile=coverage.out ./...
+	go test -v -cover -coverprofile=cover.out
 
-cover:
-	go tool cover -html=coverage.out
+coverout:
+	go tool cover -html=cover.out
 
 bench:
-	go test -v -bench . -run ^$$ ./...
+	go test -v -bench=. -run=^$$ -benchtime=10s -cpuprofile=cpu.out
+
+cpuout:
+	go tool pprof -http=: cpu.out
 
 lint:
 	golangci-lint run
