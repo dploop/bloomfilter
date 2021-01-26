@@ -1,4 +1,4 @@
-# Bloom filter [![License](https://img.shields.io/badge/license-BSD%202--Clause-green.svg)](https://opensource.org/licenses/BSD-2-Clause) [![Travis CI](https://api.travis-ci.org/dploop/bloomfilter.svg?branch=master)](https://travis-ci.org/dploop/bloomfilter)
+# Bloom filter [![License](https://img.shields.io/badge/license-BSD%202--Clause-green.svg)](https://opensource.org/licenses/BSD-2-Clause) [![Travis CI](https://api.travis-ci.com/dploop/bloomfilter.svg?branch=master)](https://travis-ci.com/dploop/bloomfilter)
 
 A [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) is a space-efficient
 probabilistic data structure, conceived by Burton Howard Bloom in 1970, that is
