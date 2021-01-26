@@ -10,7 +10,6 @@ import (
 )
 
 func TestNewWithEstimate(t *testing.T) {
-
 	negatives := []struct {
 		n   uint64
 		p   float64
@@ -24,8 +23,9 @@ func TestNewWithEstimate(t *testing.T) {
 	}
 	for _, negative := range negatives {
 		bf, err := bloomfilter.NewWithEstimate(negative.n, negative.p)
-		_ = assert.Nil(t, bf) && assert.Error(t, err)
-		_ = assert.Contains(t, err.Error(), negative.msg)
+		assert.Nil(t, bf)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), negative.msg)
 	}
 
 	positives := []struct {
@@ -39,12 +39,12 @@ func TestNewWithEstimate(t *testing.T) {
 	for _, positive := range positives {
 		bf, err := bloomfilter.NewWithEstimate(positive.n, positive.p,
 			bloomfilter.WithHasher(hasher.Murmur3))
-		_ = assert.NotNil(t, bf) && assert.NoError(t, err)
+		assert.NotNil(t, bf)
+		assert.NoError(t, err)
 	}
 }
 
 func TestNew(t *testing.T) {
-
 	negatives := []struct {
 		m   uint64
 		k   uint64
@@ -55,8 +55,9 @@ func TestNew(t *testing.T) {
 	}
 	for _, negative := range negatives {
 		bf, err := bloomfilter.New(negative.m, negative.k)
-		_ = assert.Nil(t, bf) && assert.Error(t, err)
-		_ = assert.Contains(t, err.Error(), negative.msg)
+		assert.Nil(t, bf)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), negative.msg)
 	}
 
 	positives := []struct {
@@ -70,44 +71,44 @@ func TestNew(t *testing.T) {
 	for _, positive := range positives {
 		bf, err := bloomfilter.New(positive.m, positive.k,
 			bloomfilter.WithHasher(hasher.Murmur3))
-		_ = assert.NotNil(t, bf) && assert.NoError(t, err)
+		assert.NotNil(t, bf)
+		assert.NoError(t, err)
 	}
 }
 
 func TestBloomFilter_Add(t *testing.T) {
-
 	bf, err := bloomfilter.NewWithEstimate(1000, 0.03)
-	_ = assert.NotNil(t, bf) && assert.NoError(t, err)
+	assert.NotNil(t, bf)
+	assert.NoError(t, err)
 
 	foo, bar := []byte("foo"), []byte("bar")
-	_ = assert.False(t, bf.Contains(foo))
-	_ = assert.False(t, bf.Contains(bar))
+	assert.False(t, bf.Contains(foo))
+	assert.False(t, bf.Contains(bar))
 	bf.Add(foo)
-	_ = assert.True(t, bf.Contains(foo))
-	_ = assert.False(t, bf.Contains(bar))
+	assert.True(t, bf.Contains(foo))
+	assert.False(t, bf.Contains(bar))
 	bf.Add(bar)
-	_ = assert.True(t, bf.Contains(foo))
-	_ = assert.True(t, bf.Contains(bar))
+	assert.True(t, bf.Contains(foo))
+	assert.True(t, bf.Contains(bar))
 }
 
 func TestBloomFilter_Contains(t *testing.T) {
-
 	bf, err := bloomfilter.NewWithEstimate(1000, 0.03)
-	_ = assert.NotNil(t, bf) && assert.NoError(t, err)
+	assert.NotNil(t, bf)
+	assert.NoError(t, err)
 
 	foo, bar := []byte("foo"), []byte("bar")
-	_ = assert.False(t, bf.Contains(foo))
-	_ = assert.False(t, bf.Contains(bar))
+	assert.False(t, bf.Contains(foo))
+	assert.False(t, bf.Contains(bar))
 	bf.Add(foo)
-	_ = assert.True(t, bf.Contains(foo))
-	_ = assert.False(t, bf.Contains(bar))
+	assert.True(t, bf.Contains(foo))
+	assert.False(t, bf.Contains(bar))
 	bf.Add(bar)
-	_ = assert.True(t, bf.Contains(foo))
-	_ = assert.True(t, bf.Contains(bar))
+	assert.True(t, bf.Contains(foo))
+	assert.True(t, bf.Contains(bar))
 }
 
 func BenchmarkBloomFilter_Add(b *testing.B) {
-
 	const n = 1000000
 	bf, _ := bloomfilter.NewWithEstimate(n, 0.03)
 
@@ -121,7 +122,6 @@ func BenchmarkBloomFilter_Add(b *testing.B) {
 }
 
 func BenchmarkBloomFilter_Contains(b *testing.B) {
-
 	const n = 1000000
 	bf, _ := bloomfilter.NewWithEstimate(n, 0.03)
 	for i := 0; i < n; i++ {

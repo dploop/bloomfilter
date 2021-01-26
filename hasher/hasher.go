@@ -6,4 +6,6 @@ import (
 
 type Hasher func(item []byte) (uint64, uint64)
 
-var Murmur3 = murmur3.Sum128
+func Murmur3(item []byte) (uint64, uint64) {
+	return murmur3.Sum128(item)
+}
